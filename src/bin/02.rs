@@ -29,14 +29,6 @@ static WINNING_COMBOS: phf::Map<&'static str, &'static str> = phf_map! {
     "Scissors" => "Paper"
 };
 
-// // How to lose! Keys are used to show what will be the selection.
-// static LOSING_COMBOS: phf::Map<&'static str, &'static str> = phf_map! {
-//     "Scissors" => "Rock",
-//     "Rock" => "Paper",
-//     "Paper" => "Scissors"
-// };
-
-
 #[derive(Debug, Clone)]
 pub struct GameTurnFormatError;
 
