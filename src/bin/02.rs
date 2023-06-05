@@ -108,6 +108,8 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
+    // I just used part_one...
+
     None
 }
 
