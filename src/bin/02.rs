@@ -52,27 +52,24 @@ pub fn parse_game_turn(turn_data: &str) -> Result<GameTurn, GameTurnFormatError>
     }
 }
 
-pub fn calculate_score(turn_num: usize, game_turn: GameTurn) -> u32 {
+pub fn calculate_score(_turn_num: usize, game_turn: GameTurn) -> u32 {
     let opponents_move_name = MOVE_NAMES.get(game_turn.opponents_move).cloned().unwrap();
     let my_move_name = MOVE_NAMES.get(game_turn.recommended_move).cloned().unwrap();
 
     let result_bonus: u32 = {
-        // Check for a draw
-        if opponents_move_name.eq(my_move_name) {
-            return 3;
-        }
-
-        // Check to see if I got my butt whooped
         let what_opponent_would_win_over = WINNING_COMBOS.get(opponents_move_name).cloned().unwrap();
 
         if what_opponent_would_win_over.eq(my_move_name) {
-            return 0;
+            // Loss
+            0
+        } else if opponents_move_name.eq(my_move_name) {
+            // Draw
+            3
+        } else {
+            // I won!!
+            6
         }
-
-        // I won!
-        6
     };
-
 
     MOVE_POINTS.get(my_move_name).cloned().unwrap() + result_bonus
 }
