@@ -1,19 +1,16 @@
-use std::{fmt, result};
+use std::{fmt};
 
 use ::phf::phf_map;
 
 pub struct GameTurn<'a> {
     opponents_move: &'a str,
-    recommended_move: &'a str
+    desired_outcome: &'a str
 }
 
 static MOVE_NAMES: phf::Map<&'static str, &'static str> = phf_map! {
     "A" => "Rock",
     "B" => "Paper",
-    "C" => "Scissors",
-    "X" => "Rock",
-    "Y" => "Paper",
-    "Z" => "Scissors"
+    "C" => "Scissors"
 };
 
 static MOVE_POINTS: phf::Map<&'static str, u32> = phf_map! {
@@ -28,6 +25,14 @@ static WINNING_COMBOS: phf::Map<&'static str, &'static str> = phf_map! {
     "Paper" => "Rock",
     "Scissors" => "Paper"
 };
+
+// What items are needed to pick to lose to the keys
+static LOSING_COMBOS: phf::Map<&'static str, &'static str> = phf_map! {
+    "Scissors" => "Rock",
+    "Rock" => "Paper",
+    "Paper" => "Scissors"
+};
+
 
 #[derive(Debug, Clone)]
 pub struct GameTurnFormatError;
@@ -45,41 +50,55 @@ pub fn parse_game_turn(turn_data: &str) -> Result<GameTurn, GameTurnFormatError>
         2 => {
             Ok(GameTurn {
                 opponents_move: split_data[0],
-                recommended_move: split_data[1]
+                desired_outcome: split_data[1]
             })
         }
         _ => Err(GameTurnFormatError)
     }
 }
 
-pub fn calculate_score(_turn_num: usize, game_turn: GameTurn) -> u32 {
+pub fn locate_move_points(move_name: &str) -> u32 {
+    MOVE_POINTS.get(move_name).cloned().unwrap()
+}
+
+pub fn determine_my_moves_points(game_turn: GameTurn) -> u32 {
     let opponents_move_name = MOVE_NAMES.get(game_turn.opponents_move).cloned().unwrap();
-    let my_move_name = MOVE_NAMES.get(game_turn.recommended_move).cloned().unwrap();
 
-    let result_bonus: u32 = {
-        let what_opponent_would_win_over = WINNING_COMBOS.get(opponents_move_name).cloned().unwrap();
+    match game_turn.desired_outcome {
+        "X" =>  {
+            // Get the move name that would allow my opponent to win
+            locate_move_points(WINNING_COMBOS.get(opponents_move_name).cloned().unwrap())
+        },
+        "Y" => {
+            //Draw. Ez pz.
+            locate_move_points(opponents_move_name)
+        },
+        "Z" => {
+            // Get the move name that would have me be the victor.
+            locate_move_points(LOSING_COMBOS.get(opponents_move_name).cloned().unwrap())
+        },
+        // I should probably throw a fit here if some other value is passed.
+        _ => 0
+    }
+}
 
-        if what_opponent_would_win_over.eq(my_move_name) {
-            // Loss
-            0
-        } else if opponents_move_name.eq(my_move_name) {
-            // Draw
-            3
-        } else {
-            // I won!!
-            6
-        }
+pub fn calculate_score(game_turn: GameTurn) -> u32 {
+    let result_bonus: u32 = match game_turn.desired_outcome {
+        "X" => 0,
+        "Y" => 3,
+        "Z" => 6,
+        _ => 0
     };
 
-    MOVE_POINTS.get(my_move_name).cloned().unwrap() + result_bonus
+    determine_my_moves_points(game_turn) + result_bonus
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
-    let total_score: u32 = input.split('\n').enumerate().map(|(i, line)| {
+    let total_score: u32 = input.split('\n').map(|line| {
         let game_turn = parse_game_turn(line);
 
         match game_turn {
-            Ok(game_turn) => calculate_score(i, game_turn),
+            Ok(game_turn) => calculate_score(game_turn),
             _ => 0
         }
     })
