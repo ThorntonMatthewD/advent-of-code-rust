@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 pub fn parse_elves_caloric_rations(input: &str) -> Vec<Vec<u32>> {
     input
         .split("\n\n")
@@ -30,8 +32,19 @@ pub fn part_one(input: &str) -> Option<u32> {
 pub fn part_two(input: &str) -> Option<u32> {
     let elf_calorie_packs = parse_elves_caloric_rations(input);
 
+    // Sort elements
+    // I wish I knew of a more clever way of doing this, but it works so...
+    let sorted_packs: Vec<u32> = elf_calorie_packs
+        .into_iter()
+        .map(|rations_pack| {
+            rations_pack
+                .into_iter()
+                .sum()
+        })
+        .sorted_by(|a: &u32, b| b.cmp(a))
+        .collect();
 
-    Some(100)
+    Some(sorted_packs[0..3].iter().sum())
 }
 
 fn main() {
